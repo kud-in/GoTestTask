@@ -1,0 +1,20 @@
+version: "3.6"
+services:
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "8080:8080"
+    image: "golang-test-task:local"
+    networks:
+      - GoTestNetwork
+
+networks:
+  platform_public:
+    external: true
+
+    #docker-compose --file docker-compose.loc.yml up
+    #docker-compose --file docker-compose.loc.yml build --no-cache
+    #docker-compose --file docker-compose.loc.yml down
+

@@ -1,0 +1,388 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Test Task for Golang Developer",
+
+    "contact": {
+      "email": "kydin@yandex.ua"
+    }
+
+  },
+  "host": "localhost:8080",
+  "basePath": "/v1",
+  "tags": [
+    {
+      "name": "status",
+      "description": "Получение статуса, возвращает текущее значение валюты (последнее), \nтак же должен отдать среднюю стоимость за 24 часа, за неделю, за месяц в одном запросе"
+    },
+    {
+      "name": "history",
+      "description": "Получение истории агрегированных данных. \nЗапрос возможен с ограничением периода запрашиваемых данных, всегда запрашивается вид агрегации (среднее за 1 минуту, за 5 минут, за 1 час, за день). \nОтвет запроса содержит массив элементов являющимися единицами одного вида агрегации, \nсреднюю стоимость валюты за каждый момент времени (08-09-2019 17:00 – 65.4, 08-09-2019 17:05 – 64.3)"
+    },
+    {
+      "name": "cost",
+      "description": "Запрос стоимость валюты за момент времени. \nПараметром запроса является отметка времени, результатом значение стоимости."
+    }
+  ],
+  "schemes": [
+    "http"
+  ],
+  "paths": {
+    "/status/{code}": {
+      "get": {
+        "tags": [
+          "status"
+        ],
+        "summary": "get current status",
+        "description": "",
+        "operationId": "getStatusByCode",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "код валюты",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "usdrub",
+              "eurrub"
+            ],
+            "default": "usdrub"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешное выполнение запроса",
+            "schema": {
+              "$ref": "#/definitions/Status_200"
+            }
+          },
+          "404": {
+            "description": "Неизвестный код валюты или данные по валюте отсутствуют",
+            "schema": {
+              "$ref": "#/definitions/Model_404"
+            }
+          }
+        }
+      }
+    },
+
+    "/history/{code}": {
+      "get": {
+        "tags": [
+          "history"
+        ],
+        "summary": "getting aggregated data history",
+        "description": "",
+        "operationId": "getDataHistory",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "код валюты",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "usdrub",
+              "eurrub"
+            ],
+            "default": "usdrub"
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "description": "The aggregation interval",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "1m",
+              "5m",
+              "1h",
+              "1d"
+            ],
+            "default": "5m"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "From datetime, format => 'YYYY-MM-DD HH:MM'",
+            "required": false,
+            "type": "string",
+            "default": "2019-08-27 15:00"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "To datetime, format => 'YYYY-MM-DD HH:MM'",
+            "required": false,
+            "type": "string",
+            "default": "2019-08-28 10:00"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешное выполнение запроса",
+            "schema": {
+              "$ref": "#/definitions/History_200"
+            }
+          },
+          "404": {
+            "description": "Неизвестный код валюты или данные по валюте отсутствуют",
+            "schema": {
+              "$ref": "#/definitions/Model_404"
+            }
+          },
+          "400": {
+            "description": "Неверные параметры запроса",
+            "schema": {
+              "$ref": "#/definitions/Model_400"
+            }
+          }
+        }
+      }
+    },
+
+    "/cost/{code}": {
+      "get": {
+        "tags": [
+          "cost"
+        ],
+        "summary": "get cost per point in time",
+        "description": "",
+        "operationId": "getCostByTime",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "description": "код валюты",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "usdrub",
+              "eurrub"
+            ],
+            "default": "usdrub"
+          },
+          {
+            "name": "datetime",
+            "in": "query",
+            "description": "time format => 'YYYY-MM-DD HH:MM'",
+            "required": true,
+            "type": "string",
+            "default": "2019-08-27 21:32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешное выполнение запроса",
+            "schema": {
+              "$ref": "#/definitions/Cost_200"
+            }
+          },
+          "404": {
+            "description": "Неизвестный код валюты или данные по валюте отсутствуют",
+            "schema": {
+              "$ref": "#/definitions/Model_404"
+            }
+          },
+          "400": {
+            "description": "Неверные параметры запроса",
+            "schema": {
+              "$ref": "#/definitions/Model_400"
+            }
+          }
+        }
+      }
+    },
+  },
+
+
+
+  "definitions": {
+
+    "StatusPayload": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "example": "USDRUB",
+          "description": "Код Валюты"
+        },
+        "last": {
+          "type": "number",
+          "example": 66.6264,
+          "description": "Текущее значение валюты (последнее)"
+        },
+        "day": {
+          "type": "number",
+          "example": 66.6263,
+          "description": "Средняя стоимость за 24 часа"
+        },
+        "week": {
+          "type": "number",
+          "example": 66.6262,
+          "description": "Средняя стоимость за неделю"
+        },
+        "month": {
+          "type": "number",
+          "example": 66.6261,
+          "description": "Средняя стоимость за месяц"
+        }
+      }
+    },
+    "Status_200": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Success",
+          "description": "Сообщение о результате выполнения запроса"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "example": 200,
+          "description": "Код состояния HTTP"
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StatusPayload"
+          },
+          "description": "Полезная нагрузка запроса"
+        }
+      }
+    },
+    "CostPayload": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "example": "USDRUB",
+          "description": "Код Валюты"
+        },
+        "rate": {
+          "type": "number",
+          "example": 66.6264,
+          "description": "Значение стоимости валюты"
+        }
+      }
+    },
+    "Cost_200": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Success",
+          "description": "Сообщение о результате выполнения запроса"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "example": 200,
+          "description": "Код состояния HTTP"
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CostPayload"
+          },
+          "description": "Полезная нагрузка запроса"
+        }
+      }
+    },
+    "HistoryPayload": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string",
+          "example": "2019-08-27 20:00",
+          "description": "Отметка времени"
+        },
+        "rate": {
+          "type": "number",
+          "example": 66.6264,
+          "description": "Значение стоимости валюты"
+        }
+      }
+    },
+    "History_200": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Success",
+          "description": "Сообщение о результате выполнения запроса"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "example": 200,
+          "description": "Код состояния HTTP"
+        },
+        "payload": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/HistoryPayload"
+          },
+          "description": "Полезная нагрузка запроса"
+        }
+      }
+    },
+
+    "Model_404": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Page Not Found",
+          "description": "Сообщение о результате выполнения запроса"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "example": 404,
+          "description": "Код состояния HTTP"
+        },
+        "payload": {
+          "type": "array",
+          "example": [],
+          "description": "пустой массив"
+        }
+      }
+    },
+    "Model_400": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "Bad Request",
+          "description": "Сообщение о результате выполнения запроса"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "example": 400,
+          "description": "Код состояния HTTP"
+        },
+        "payload": {
+          "type": "array",
+          "example": [],
+          "description": "пустой массив"
+        }
+      }
+    }
+
+  }
+
+}
