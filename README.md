@@ -21,7 +21,7 @@
 ### Run App
 
 ```
-git clone https://github.com/kudin-0x57/GoTestTask.git
+git clone https://github.com/kud-in/GoTestTask.git
 cd ./GoTestTask
 docker network create -d bridge GoTestNetwork
 docker-compose -f docker-compose.yml up --build -d
